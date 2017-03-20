@@ -332,5 +332,29 @@ following to the source file:
 |---------------------- & ------------------------|
 | sfho_mass = mass                                |
 ---------------------------------------------------
+Additionally, if OpenMP support is desired, the hempel module needs
+to contain the line ```!$OMP THREADPRIVATE(coul,degen)``` after the
+module declarations, prior to the function and subroutine implementations.
+
 We also found that an updated path is needed for the
-composition binary included with the module.
+composition binary included with the module, located in the
+```compdata_readin``` subroutine.
+
+
+(Optional) Python Bindings
+--------------------------
+Preliminary python bindings are available if ```PYTHON_BINDINGS=1``` is
+set in the make.inc file. To build these bindings f2py and f90wrap are
+both required to be present on the system. Currently, only the functions
+exposed in src/pyinterface.F90 are exposed to python so as to encapsulate
+the fortran runtime from python. Additional functions can be added here
+to make internal calls into NuLib if desired. e.g.
+
+``` python
+import nulib
+
+nulib.InitializeNuLib()
+for A,Z in nulib.GetNuclei():
+    print A,Z
+
+```

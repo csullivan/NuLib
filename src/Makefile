@@ -28,6 +28,16 @@ ifeq ($(NUCLEI_HEMPEL),1)
 	DEFS += -DNUCLEI_HEMPEL 
 endif
 
+F2PY := $(shell which f2py)
+F90WRAP := $(shell which f90wrap)
+ifeq ($(PYTHON_BINDINGS),1)
+ifndef F2PY
+	$(error "Build python bindings flag is set, but f2py is not available on this system.")
+endif
+ifndef F90WRAP
+	$(error "Build python bindings flag is set, but f90wrap is not available on this system.")
+endif
+endif
 
 #the weak_rates module requires M. Hempel's
 #EOS dependent NSE distributions
@@ -116,12 +126,14 @@ nulib.a: $(EXTRADEPS) $(F_OBJECTS) $(MOD_OBJECTS) $(OBJECTS) $(NT_OBJECTS)
 	$(F90) $(F90FLAGS) $(DEFS) $(MODINC) $(EXTRAINCS) $(LDFLAGS) -o $@ $(MOD_OBJECTS) $(OBJECTS) $(F_OBJECTS) $(EXTRAOBJECTS)
 
 PyNuLib:
-	f90wrap --abort-func "abort; print *," -m $@ pyinterface.F90
+ifeq ($(PYTHON_BINDINGS),1)
+	$(F90WRAP) --abort-func "abort; print *," -m $@ pyinterface.F90
 	$(F90) $(F90FLAGS) $(EXTRAINCS) $(MODINC) f90wrap_*.f90 -c
-	f2py -m _$@ -h $@.pyf f90wrap_*.f90
-	f2py  --f90flags="-ffree-line-length-none" --f77flags="-ffree-line-length-none -ffixed-line-length-none" -c $@.pyf pyinterface.o f90wrap_pyinterface.o $(HDF5LIBS) -L.. -lNuLib
+	$(F2PY) -m _$@ -h $@.pyf f90wrap_*.f90
+	LDFLAGS="$(LDFLAGS) -Wl,-rpath,$(HDF5DIR)/lib -Wl,-rpath,\\\\\$$ORIGIN" $(F2PY)  --f90flags="-ffree-line-length-none" --f77flags="-ffree-line-length-none -ffixed-line-length-none" -c $@.pyf pyinterface.o f90wrap_pyinterface.o $(HDF5LIBS) -L.. -lNuLib
 	mv _$@.so ..
 	mv $@.py ..
+endif
 
 test:	../libNuLib.so  test.F90
 	$(F90) $(F90FLAGS) $(DEFS) -o test $^ -Wl,-rpath,src

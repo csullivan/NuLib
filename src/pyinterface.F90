@@ -3,8 +3,6 @@ module pynulib
   use class_ratelibrary
   use weakrates_interface, only : weakratelib
 
-  ! the weak rate library object
-
   double precision, dimension(8140,18) :: global_emissivity
   double precision, dimension(18) :: global_emissivity_freep
   double precision, dimension(18) :: global_blocking_factor
@@ -19,8 +17,11 @@ module pynulib
 
   integer :: nspecies
 
-  contains
+contains
 
+!------------------------------------------------------------------------------------!
+
+    ! a basic nulib initialization similar to that found in make_table_example
     subroutine standard_nulib_init
       use nuclei_hempel
       use inputparser
@@ -59,12 +60,6 @@ module pynulib
       call read_eos_table(eos_filename) !read in EOS table & set reference mass
       call set_up_Hempel !set's up EOS for nuclear abundances
 
-      !!!!! The initialization of the weak rate library should be done through a seperate function call !!!!!
-      ! initialize weak-rate library if it is turned on in requested_interactions.inc
-      !if (add_nue_emission_weakinteraction_ecap.or.add_anue_emission_weakinteraction_poscap) then
-      !   call initialize_weakratelib(parameters_filename)
-      !endif
-
       adhoc_nux_factor = 0.0d0 !increase for adhoc nux heating (also set
       !add_nux_absorption_on_n_and_p to true)
       !set up energies bins
@@ -93,7 +88,7 @@ module pynulib
 
     end subroutine standard_nulib_init
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!------------------------------------------------------------------------------------!
 
     subroutine weakrate_init()
       use class_ratelibrary
@@ -116,7 +111,7 @@ module pynulib
 
     end subroutine weakrate_init
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!------------------------------------------------------------------------------------!
 
     subroutine get_dyedt(xrho,xtemp,xye)
       use nuclei_hempel
@@ -229,11 +224,10 @@ module pynulib
 
       return
 
-!      print *, " "
-
     end subroutine get_dyedt
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!------------------------------------------------------------------------------------!
+
 
     subroutine calculate_neutrino_blocking(xrho,xtemp,xye,xalp,f_nu)
       use nulib, only : mueindex, muhatindex, energies, rhoindex, tempindex, yeindex
@@ -259,53 +253,6 @@ module pynulib
 
     end subroutine calculate_neutrino_blocking
 
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-    subroutine example
-      use nuclei_hempel
-      use class_ratetable
-      use class_rateapproximation
-      use nulib
-
-      implicit none
-      ! parameters file containing tables and loading priority
-      character(200) :: parameters_filename = "./parameters"
-
-
-      ! function parameters
-      integer :: A,Z,table_index
-      double precision :: T9,logrhoye
-      double precision :: temp_mev, qvalue_mev, echempot_mev
-      double precision :: density_gcm3, ye
-      double precision :: rate
-
-      double precision :: eos_variables(15)
-
-      ! Initialization
-      m_ref = m_amu !sets reference mass for NSE
-      call set_up_Hempel !set's up EOS for nuclear abundances
-      weakratelib = new_RateLibrary(parameters_filename)
-      call readtable(weakratelib%eos_path) !read in EOS table
-
-      ! ------------------------------------------------------------------------ !
-      ! There are three ways to access the weak rates.                           !
-      ! But in each case, the return_weakrate function interface is used         !
-      ! and the difference lies in the function parameters that are passed in.   !
-      ! These three methods are detailed below.                                  !
-      ! ------------------------------------------------------------------------ !
-
-      A = 56
-      Z = 28  ! Ni56
-      T9 = 10.0d0 ! 10 GK
-      logrhoye = 12.0d0 ! log10(density*ye [g/cm3])
-      table_index = in_table(weakratelib,A,Z,logrhoye,T9) ! retrieve table containing rate
-
-      rate = return_weakrate(weakratelib,A,Z,T9,logrhoye,table_index,2)
-      print *, "return_weakrate_from_table: ",log10(rate)
-
-    end subroutine example
-
-
+!------------------------------------------------------------------------------------!
 
 end module pynulib
