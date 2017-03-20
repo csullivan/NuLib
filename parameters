@@ -7,13 +7,19 @@ lmp_rates     		= 	"lmprates.dat"
 lmsh_rates		= 	"lmshrates.dat"
 oda_rates		=	"odarates.dat"
 ffn_rates		=	"ffnrates.dat"
+pruet_rates1		=	"pruet_66_80.dat"
+pruet_rates2		=	"pruet_66_80_leftover.dat"
+pruet_rates3		=	"pruet_81_110.dat"
 
 ## Rate table priority hierarchy ##
 ilmp			=	1
-ilmsh			=	2
-ioda			=	3
+ilmsh			=	0
+ioda			=	0
 iffn			=	0
-iapprox			=	4
+ipruet1			=	0
+ipruet2			=	0
+ipruet3			=	0
+iapprox			=	0
 
 # 0 indicates the table will not be used
 # 1 indicates highest priority, if other tables have rates for a nuclei contained in this table, they will be ignored.
