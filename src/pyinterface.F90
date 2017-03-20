@@ -1,12 +1,26 @@
 !-*-f90-*-
 module pynulib
   use class_ratelibrary
+  use weakrates_interface, only : weakratelib
 
   ! the weak rate library object
-  type(RateLibrary) :: weakrate_library
-
+!  type(RateLibrary) :: weakrate_library
+  
+  double precision, dimension(8140,18) :: global_emissivity
+  double precision, dimension(18) :: global_emissivity_freep
+  double precision, dimension(18) :: global_blocking_factor
+  double precision :: global_dyedt_freep
+  double precision, dimension(8140) :: global_dyedt
+  
+  integer, allocatable,dimension(:) :: nuclei_A
+  integer, allocatable,dimension(:) :: nuclei_Z
+  double precision, allocatable,dimension(:) :: number_densities
+  double precision, allocatable,dimension(:) :: mass_fractions
+  integer, allocatable,dimension(:,:) :: nucleus_index
+  
+  integer :: nspecies
+  
   contains
-
 
     subroutine standard_nulib_init
       use nuclei_hempel
@@ -35,8 +49,8 @@ module pynulib
       integer :: mytable_number_groups = 18
 
       !NuLib parameters file (weak rates and EOS)
-      character*200 :: parameters_filename = "./parameters"
-      real*8 dxfac,mindx
+      character(200) :: parameters_filename = "./parameters"
+      double precision dxfac,mindx
       integer :: i
 
       call input_parser(parameters_filename)
@@ -80,7 +94,175 @@ module pynulib
 
     end subroutine standard_nulib_init
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+    subroutine weakrate_init()
+      use class_ratelibrary
+      use nuclei_hempel
+      character(200) :: parameters_filename = "./parameters"
+
+      integer a, z
+      
+      call get_Hempel_number_of_species(nspecies)
+      
+      allocate(nuclei_A(nspecies))
+      allocate(nuclei_Z(nspecies))
+      allocate(number_densities(nspecies))
+      allocate(mass_fractions(nspecies))
+      allocate(nucleus_index(nspecies,nspecies))
+      
+      call get_Hempel_As_and_Zs(nuclei_A,nuclei_Z)
+      
+      weakratelib = new_RateLibrary(parameters_filename)
+      
+    end subroutine weakrate_init
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!    
+    
+    subroutine get_dyedt(xrho,xtemp,xye)
+      use nuclei_hempel 
+      use inputparser
+      use nulib, only : tempindex,  mueindex, rhoindex, yeindex, kelvin_to_mev,& 
+           add_nue_emission_weakinteraction_ecap, single_point_return_all,neutrino_scheme,&
+           mev_to_erg,energies,bin_widths, pi
+      use sfho_frdm_composition_module, only : sfho_mass
+      use weakrates_interface, only : emissivity_from_weak_interaction_rates
+      use class_ratelibrary, only: in_table
+      
+      implicit none
+      
+      integer i
+      double precision, intent(in) :: xrho,xtemp,xye
+      double precision, dimension(15) :: eos_variables
+      !          double precision, dimension(8140,18) :: emissivity,emissivity_temp
+      double precision, dimension(3,18) :: local_emissivity
+      double precision, dimension(3,18) :: local_absopacity
+      double precision, dimension(3,18) :: local_scatopacity
+      double precision, dimension(3,18) :: blackbody_spectra
+      
+      integer, dimension(5),save :: file_priority
+      integer idxtable, A, Z 
+      
+      double precision :: q
+      double precision :: logrhoYe,t9
+      logical :: parameterized_rate  
+
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      ! integer j, k, myIndex
+      ! !number of nuclei in high sensitivity region: 30, 74, 315
+      ! integer, parameter :: nNuclei = 74
+      ! double precision, dimension(nNuclei) :: hsA, hsZ
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      
+      eos_variables = 0.0d0
+      eos_variables(rhoindex) = xrho
+      eos_variables(tempindex) = xtemp
+      eos_variables(yeindex) = xye
+
+      call set_eos_variables(eos_variables)
+      
+      !Hempel EOS and number of species are set up in readrates
+      call nuclei_distribution_Hempel(&
+           nspecies,nuclei_A,nuclei_Z,mass_fractions,number_densities,eos_variables)          
+      global_emissivity = 0.0d0
+      logrhoYe = log10(eos_variables(rhoindex)*eos_variables(yeindex))
+      t9 = (eos_variables(tempindex)/kelvin_to_mev)*1.0d-9
+
+      do i=1,nspecies
+         
+         parameterized_rate = .false.
+
+         if(number_densities(i).eq.0.0d0)cycle
+
+         A = nuclei_A(i) 
+         Z = nuclei_Z(i)
+
+         !if rate data from a table is not present and A>4 with iapprox nonzero,
+         !use the parameterized rate function, else skip this nucleus
+         ! check if rate exists in a table
+         if (weakratelib%ntables.ne.0)then
+
+            idxtable = in_table(weakratelib,A,Z,logrhoYe,t9)
+
+         endif
+
+         ! if no table contains the requested rate
+         if(idxtable.eq.0) then
+            ! and if the approximation is turned on
+            if(weakratelib%priority(size(weakratelib%priority)).gt.0) then
+               ! and the nucleus is above the A=4 isobars and below
+               if (A.gt.4) then
+               else
+                  cycle
+               end if
+               ! check to make sure masses exist for both parent and daughter nucleus
+               if(hempel_lookup_table(A,Z).eq.0.or.hempel_lookup_table(A,Z-1).eq.0) then
+                  cycle
+               end if
+
+            else
+               cycle
+            end if
+         end if
+
+         !emissivity calculation
+         global_emissivity(i,:) = emissivity_from_weak_interaction_rates(A,Z,&
+              number_densities(i),eos_variables,1,idxtable)
+
+         !calculate dyedt
+         global_dyedt(i) = (4.0d0*pi/6.02214129d23/mev_to_erg/eos_variables(rhoindex))*Sum(bin_widths(:)*global_emissivity(i,:)*global_blocking_factor(:)/energies(:))
+
+      end do
+      
+      !calculate emissivity for electron capture on free protons
+      !note that in order to only calculate the above for free protons,electron
+      !capture must be turned off in requested_interactions.inc or manually here
+      add_nue_emission_weakinteraction_ecap = .false.    
+      call single_point_return_all(eos_variables, &
+           local_emissivity,local_absopacity,local_scatopacity,neutrino_scheme)
+      global_emissivity_freep = local_emissivity(1,:)
+      global_dyedt_freep = (4.0d0*pi/6.02214129d23/mev_to_erg/eos_variables(rhoindex))*Sum(bin_widths(:)*global_emissivity_freep(:)*global_blocking_factor(:)/energies(:))          
+
+      ! resetting state
+      add_nue_emission_weakinteraction_ecap = .true.    
+      number_densities = 0.0d0
+      mass_fractions = 0.0d0
+
+      return
+
+!      print *, " "
+      
+    end subroutine get_dyedt
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+    subroutine calculate_neutrino_blocking(xrho,xtemp,xye,xalp,f_nu)
+      use nulib, only : mueindex, muhatindex, energies, rhoindex, tempindex, yeindex
+      use nuclei_hempel
+      
+      double precision, intent(in) :: xrho,xtemp,xye,xalp
+      double precision, intent(in),dimension(18) :: f_nu
+      double precision, dimension(18) :: f_nu_eq
+      double precision, dimension(15) :: eos_variables
+      double precision :: xeta
+
+      eos_variables = 0.0d0
+      global_blocking_factor = 0.0d0
+
+      eos_variables(rhoindex) = xrho
+      eos_variables(tempindex) = xtemp
+      eos_variables(yeindex) = xye
+      
+      call set_eos_variables(eos_variables)
+      xeta = (eos_variables(mueindex) - eos_variables(muhatindex))/xtemp
+      f_nu_eq(:) = 1.0d0/(exp(energies(:)/xtemp - xeta) + 1.0d0)
+      global_blocking_factor(:) = xalp*(1-f_nu(:)/f_nu_eq(:))
+
+    end subroutine calculate_neutrino_blocking
+    
+    
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    
     subroutine example
       use nuclei_hempel
       use class_ratetable
@@ -89,7 +271,7 @@ module pynulib
 
       implicit none
       ! parameters file containing tables and loading priority
-      character*200 :: parameters_filename = "./parameters"
+      character(200) :: parameters_filename = "./parameters"
 
 
       ! function parameters
@@ -104,8 +286,8 @@ module pynulib
       ! Initialization
       m_ref = m_amu !sets reference mass for NSE
       call set_up_Hempel !set's up EOS for nuclear abundances
-      weakrate_library = new_RateLibrary(parameters_filename)
-      call readtable(weakrate_library%eos_path) !read in EOS table
+      weakratelib = new_RateLibrary(parameters_filename)
+      call readtable(weakratelib%eos_path) !read in EOS table
 
       ! ------------------------------------------------------------------------ !
       ! There are three ways to access the weak rates.                           !
@@ -118,9 +300,9 @@ module pynulib
       Z = 28  ! Ni56
       T9 = 10.0d0 ! 10 GK
       logrhoye = 12.0d0 ! log10(density*ye [g/cm3])
-      table_index = in_table(weakrate_library,A,Z,logrhoye,T9) ! retrieve table containing rate
+      table_index = in_table(weakratelib,A,Z,logrhoye,T9) ! retrieve table containing rate
 
-      rate = return_weakrate(weakrate_library,A,Z,T9,logrhoye,table_index,2)
+      rate = return_weakrate(weakratelib,A,Z,T9,logrhoye,table_index,2)
       print *, "return_weakrate_from_table: ",log10(rate)
 
     end subroutine example

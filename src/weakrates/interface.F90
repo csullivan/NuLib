@@ -7,6 +7,8 @@ module weakrates_interface
   implicit none
   private
   public :: initialize_weakratelib, microphysical_electron_capture
+  public :: emissivity_from_weak_interaction_rates
+  public :: weakratelib
 
   ! members (singleton)
   type(RateLibrary) :: weakratelib
@@ -41,6 +43,8 @@ contains
          do_integrated_BB_and_emissivity,mueindex,rhoindex,tempindex,&
          yeindex,GPQ_n32_roots,GPQ_n32_weights
 
+    implicit none
+    
     include 'constants.inc'
 
     integer A,Z
@@ -69,8 +73,8 @@ contains
     real*8 :: rbeta      !beta decay rate (plus or minus depending on neutrino species)
     real*8 :: rcap       !capture rate (electron or positron for nue or anue)
     real*8 :: rnu        !nue or anue energy loss rate
-
-
+    
+    
     approx_rate_flag = .false.
     GPQ_interval = 0.0d0
     GPQ_coef(:) = 0.0d0
@@ -83,6 +87,7 @@ contains
        approx_rate_flag = .true.
     endif
 
+    
     if(approx_rate_flag) then
        qec_eff = return_hempel_qec(A,Z,Z-1)
     else
@@ -90,11 +95,13 @@ contains
        !average neutrino energy from rates for nue, emissivities are
        !from the betaplus direction; for anue, emissivities in the betaminus direction
        if (neutrino_species.eq.1) then
+
           rbeta = return_weakrate(weakratelib,A,Z,t9,lrhoYe,idxtable,1)
-          rcap = return_weakrate(weakratelib,A,Z,t9,lrhoYe,idxtable,2)
           rnu = return_weakrate(weakratelib,A,Z,t9,lrhoYe,idxtable,3)
+          rcap = return_weakrate(weakratelib,A,Z,t9,lrhoYe,idxtable,2)
+
           !using Qgs from table as seed for qec_solver
-          qec_eff = weakratelib%tables(idxtable)%nuclear_species(weakratelib%tables(idxtable)%nucleus_index(A,Z),1) 
+          qec_eff = weakratelib%tables(idxtable)%nuclear_species(weakratelib%tables(idxtable)%nucleus_index(A,Z),1)
           avgenergy(1) = rnu/(rcap + rbeta) 
           avgenergy(2) = qec_eff !necessary to fulfill the first comparison in qec_solver
        else if (neutrino_species.eq.2) then
@@ -115,7 +122,7 @@ contains
        !neutrino spectra to produce the correct avg. energy
        qec_eff = qec_solver(avgenergy,qec_eff,eos_variables)
     end if
-
+    
     !calculate normalization constant using effective neutrino spectra
     spectra = 0.0d0
     GPQ_interval = GPQ_intervals(qec_eff,eos_variables)   ! dynamic range finder for matching
@@ -131,9 +138,9 @@ contains
     spectra = (eos_variables(tempindex)**5)*spectra          
     if (neutrino_species.eq.1) then
        if (approx_rate_flag) then
-          normalization_constant = (return_weakrate(&
+          normalization_constant = ((return_weakrate(&
                0,eos_variables(tempindex),qec_eff,&
-               eos_variables(mueindex)-m_e))/spectra 
+               eos_variables(mueindex)-m_e,A,Z))/spectra)
        else
           normalization_constant = (rbeta+rcap)/spectra
        end if
@@ -144,7 +151,7 @@ contains
           normalization_constant = (rbeta+rcap)/spectra
        end if
     end if
-
+    
     !integrate over energy bin or take central value of bin and multiply by the bin width
     if (do_integrated_BB_and_emissivity) then
        stop "Integration is not yet supported for electron-capture emissivities" 
@@ -434,7 +441,9 @@ contains
     logrhoYe = log10(eos_variables(rhoindex)*eos_variables(yeindex))
     t9 = (eos_variables(tempindex)/kelvin_to_mev)*1.0d-9
     
+
     do i=1,weakratelib%approx%nspecies 
+
 
        if(weakratelib%approx%number_densities(i).eq.0.0d0)cycle
 
@@ -451,7 +460,8 @@ contains
        ! if no table contains the requested rate
        if(idxtable.eq.0) then
           ! and if the approximation is turned on
-          if(weakratelib%priority(5).gt.0) then
+          ! [02/10/2017] fixed bug, approx should always be last in parameters file priority list
+          if(weakratelib%priority(size(weakratelib%priority)).gt.0) then
              ! and the nucleus is above the A=4 isobars and below
              if (A.gt.4) then
              else
@@ -461,11 +471,12 @@ contains
              if(hempel_lookup_table(A,Z).eq.0.or.hempel_lookup_table(A,Z-1).eq.0) then
                 cycle
              end if             
+             
+             
           else
              cycle
           end if
        end if
-       
 
        !emissivity calculation
        emissivity_temp = emissivity_from_weak_interaction_rates(A,Z,&
