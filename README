@@ -350,11 +350,7 @@ exposed in src/pyinterface.F90 are exposed to python so as to encapsulate
 the fortran runtime from python. Additional functions can be added here
 to make internal calls into NuLib if desired. e.g.
 
-``` python
 import nulib
-
 nulib.InitializeNuLib()
 for A,Z in nulib.GetNuclei():
     print A,Z
-
-```
