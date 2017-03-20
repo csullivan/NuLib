@@ -4,22 +4,21 @@ module pynulib
   use weakrates_interface, only : weakratelib
 
   ! the weak rate library object
-!  type(RateLibrary) :: weakrate_library
-  
+
   double precision, dimension(8140,18) :: global_emissivity
   double precision, dimension(18) :: global_emissivity_freep
   double precision, dimension(18) :: global_blocking_factor
   double precision :: global_dyedt_freep
   double precision, dimension(8140) :: global_dyedt
-  
+
   integer, allocatable,dimension(:) :: nuclei_A
   integer, allocatable,dimension(:) :: nuclei_Z
   double precision, allocatable,dimension(:) :: number_densities
   double precision, allocatable,dimension(:) :: mass_fractions
   integer, allocatable,dimension(:,:) :: nucleus_index
-  
+
   integer :: nspecies
-  
+
   contains
 
     subroutine standard_nulib_init
@@ -102,35 +101,35 @@ module pynulib
       character(200) :: parameters_filename = "./parameters"
 
       integer a, z
-      
+
       call get_Hempel_number_of_species(nspecies)
-      
+
       allocate(nuclei_A(nspecies))
       allocate(nuclei_Z(nspecies))
       allocate(number_densities(nspecies))
       allocate(mass_fractions(nspecies))
       allocate(nucleus_index(nspecies,nspecies))
-      
+
       call get_Hempel_As_and_Zs(nuclei_A,nuclei_Z)
-      
+
       weakratelib = new_RateLibrary(parameters_filename)
-      
+
     end subroutine weakrate_init
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!    
-    
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
     subroutine get_dyedt(xrho,xtemp,xye)
-      use nuclei_hempel 
+      use nuclei_hempel
       use inputparser
-      use nulib, only : tempindex,  mueindex, rhoindex, yeindex, kelvin_to_mev,& 
+      use nulib, only : tempindex,  mueindex, rhoindex, yeindex, kelvin_to_mev,&
            add_nue_emission_weakinteraction_ecap, single_point_return_all,neutrino_scheme,&
            mev_to_erg,energies,bin_widths, pi
       use sfho_frdm_composition_module, only : sfho_mass
       use weakrates_interface, only : emissivity_from_weak_interaction_rates
       use class_ratelibrary, only: in_table
-      
+
       implicit none
-      
+
       integer i
       double precision, intent(in) :: xrho,xtemp,xye
       double precision, dimension(15) :: eos_variables
@@ -139,13 +138,13 @@ module pynulib
       double precision, dimension(3,18) :: local_absopacity
       double precision, dimension(3,18) :: local_scatopacity
       double precision, dimension(3,18) :: blackbody_spectra
-      
+
       integer, dimension(5),save :: file_priority
-      integer idxtable, A, Z 
-      
+      integer idxtable, A, Z
+
       double precision :: q
       double precision :: logrhoYe,t9
-      logical :: parameterized_rate  
+      logical :: parameterized_rate
 
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       ! integer j, k, myIndex
@@ -153,28 +152,28 @@ module pynulib
       ! integer, parameter :: nNuclei = 74
       ! double precision, dimension(nNuclei) :: hsA, hsZ
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      
+
       eos_variables = 0.0d0
       eos_variables(rhoindex) = xrho
       eos_variables(tempindex) = xtemp
       eos_variables(yeindex) = xye
 
       call set_eos_variables(eos_variables)
-      
+
       !Hempel EOS and number of species are set up in readrates
       call nuclei_distribution_Hempel(&
-           nspecies,nuclei_A,nuclei_Z,mass_fractions,number_densities,eos_variables)          
+           nspecies,nuclei_A,nuclei_Z,mass_fractions,number_densities,eos_variables)
       global_emissivity = 0.0d0
       logrhoYe = log10(eos_variables(rhoindex)*eos_variables(yeindex))
       t9 = (eos_variables(tempindex)/kelvin_to_mev)*1.0d-9
 
       do i=1,nspecies
-         
+
          parameterized_rate = .false.
 
          if(number_densities(i).eq.0.0d0)cycle
 
-         A = nuclei_A(i) 
+         A = nuclei_A(i)
          Z = nuclei_Z(i)
 
          !if rate data from a table is not present and A>4 with iapprox nonzero,
@@ -213,25 +212,25 @@ module pynulib
          global_dyedt(i) = (4.0d0*pi/6.02214129d23/mev_to_erg/eos_variables(rhoindex))*Sum(bin_widths(:)*global_emissivity(i,:)*global_blocking_factor(:)/energies(:))
 
       end do
-      
+
       !calculate emissivity for electron capture on free protons
       !note that in order to only calculate the above for free protons,electron
       !capture must be turned off in requested_interactions.inc or manually here
-      add_nue_emission_weakinteraction_ecap = .false.    
+      add_nue_emission_weakinteraction_ecap = .false.
       call single_point_return_all(eos_variables, &
            local_emissivity,local_absopacity,local_scatopacity,neutrino_scheme)
       global_emissivity_freep = local_emissivity(1,:)
-      global_dyedt_freep = (4.0d0*pi/6.02214129d23/mev_to_erg/eos_variables(rhoindex))*Sum(bin_widths(:)*global_emissivity_freep(:)*global_blocking_factor(:)/energies(:))          
+      global_dyedt_freep = (4.0d0*pi/6.02214129d23/mev_to_erg/eos_variables(rhoindex))*Sum(bin_widths(:)*global_emissivity_freep(:)*global_blocking_factor(:)/energies(:))
 
       ! resetting state
-      add_nue_emission_weakinteraction_ecap = .true.    
+      add_nue_emission_weakinteraction_ecap = .true.
       number_densities = 0.0d0
       mass_fractions = 0.0d0
 
       return
 
 !      print *, " "
-      
+
     end subroutine get_dyedt
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -239,7 +238,7 @@ module pynulib
     subroutine calculate_neutrino_blocking(xrho,xtemp,xye,xalp,f_nu)
       use nulib, only : mueindex, muhatindex, energies, rhoindex, tempindex, yeindex
       use nuclei_hempel
-      
+
       double precision, intent(in) :: xrho,xtemp,xye,xalp
       double precision, intent(in),dimension(18) :: f_nu
       double precision, dimension(18) :: f_nu_eq
@@ -252,17 +251,17 @@ module pynulib
       eos_variables(rhoindex) = xrho
       eos_variables(tempindex) = xtemp
       eos_variables(yeindex) = xye
-      
+
       call set_eos_variables(eos_variables)
       xeta = (eos_variables(mueindex) - eos_variables(muhatindex))/xtemp
       f_nu_eq(:) = 1.0d0/(exp(energies(:)/xtemp - xeta) + 1.0d0)
       global_blocking_factor(:) = xalp*(1-f_nu(:)/f_nu_eq(:))
 
     end subroutine calculate_neutrino_blocking
-    
-    
+
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    
+
     subroutine example
       use nuclei_hempel
       use class_ratetable

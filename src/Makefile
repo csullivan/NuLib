@@ -92,7 +92,7 @@ EXTRAINCS += $(HDF5INCS)
 EXTRAOBJECTS += $(HDF5LIBS) -Wl,-rpath,$(HDF5DIR)/lib
 
 ifeq ($(WEAK_RATES),1)
-all: nulib.a ../nulibtable_driver ../point_example ../make_table_weakrates ../libNuLib.so PyNuLib test
+all: nulib.a ../nulibtable_driver ../point_example ../make_table_weakrates ../libNuLib.so PyNuLib
 else
 all: nulib.a ../nulibtable_driver ../point_example ../make_table_example ../libNuLib.so
 endif
