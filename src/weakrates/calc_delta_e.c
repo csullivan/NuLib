@@ -79,22 +79,22 @@ double c2_ee[N_T][N_RHO] = {{1.58, 1.83, 2.09, -.812},
 /* For the definitions of
  * model0~model4, please refer to PRC,95,025805(2017)*/
 //#define USE_MOD0
-//#define USE_MOD1
-#define USE_MOD2
+#define USE_MOD1
+//#define USE_MOD2
 //#define USE_MOD3
 //#define USE_MOD4
 
 
-double get_inter_val(double rho, double T, int i, int j, int A, int Z)
+double get_inter_val(double rho, double T, int index_rho, int index_T, int A, int Z)
 {
 	double temp_ij, temp_ij1, temp_i1j, temp_i1j1, delta_e, rho_interval, T_interval;
 	double ispin;
 
 #ifdef USE_MOD1
-	temp_ij = a[i][j];
-	temp_ij1 = a[i][j+1];
-	temp_i1j = a[i+1][j];
-	temp_i1j1 = a[i+1][j+1];
+	temp_ij = a[index_T][index_rho];
+	temp_ij1 = a[index_T+1][index_rho];
+	temp_i1j = a[index_T][index_rho+1];
+	temp_i1j1 = a[index_T+1][index_rho+1];
 #endif
 #ifdef USE_MOD2
 	ispin = (A-2.0*Z)/A;
@@ -149,13 +149,13 @@ double get_inter_val(double rho, double T, int i, int j, int A, int Z)
 	}
 #endif
 
-	rho_interval = grid_rho[i+1] - grid_rho[i];
-	T_interval = grid_T[j+1] = grid_T[j];
+	rho_interval = grid_rho[index_rho+1] - grid_rho[index_rho];
+	T_interval = grid_T[index_T+1] - grid_T[index_T];
 	delta_e = T * rho * (temp_i1j1 - temp_ij1 - temp_i1j + temp_ij) / rho_interval / T_interval
-		+ rho * (grid_T[j+1] * (temp_ij1 - temp_ij) - grid_T[j] * (temp_i1j1 - temp_i1j)) / rho_interval / T_interval
-		+ T * (grid_rho[i+1] * (temp_i1j - temp_ij) - grid_rho[i] * (temp_i1j1 - temp_ij1)) / rho_interval / T_interval
-		+ (grid_rho[i+1] * grid_T[j+1] * temp_ij - grid_rho[i+1] * grid_T[j] * temp_i1j) / rho_interval / T_interval
-		+ (grid_rho[i] * grid_T[j] * temp_i1j1 - grid_rho[i] * grid_T[j+1] * temp_ij1) / rho_interval / T_interval;
+		+ rho * (grid_T[index_T+1] * (temp_ij1 - temp_ij) - grid_T[index_T] * (temp_i1j1 - temp_i1j)) / rho_interval / T_interval
+		+ T * (grid_rho[index_rho+1] * (temp_i1j - temp_ij) - grid_rho[index_rho] * (temp_i1j1 - temp_ij1)) / rho_interval / T_interval
+		+ (grid_rho[index_rho+1] * grid_T[index_T+1] * temp_ij - grid_rho[index_rho+1] * grid_T[index_T] * temp_i1j) / rho_interval / T_interval
+		+ (grid_rho[index_rho] * grid_T[index_T] * temp_i1j1 - grid_rho[index_rho] * grid_T[index_T+1] * temp_ij1) / rho_interval / T_interval;
 
 	return delta_e;
 }
