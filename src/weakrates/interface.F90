@@ -140,7 +140,7 @@ contains
        if (approx_rate_flag) then
           normalization_constant = (return_weakrate(&
                0,eos_variables(tempindex),qec_eff,&
-               eos_variables(mueindex)-m_e,A,Z))/spectra
+               eos_variables(mueindex)-m_e,eos_variables(rhoindex),A,Z))/spectra
        else
           normalization_constant = (rbeta+rcap)/spectra
        end if

@@ -1,5 +1,5 @@
 !-*-f90-*-
-#define NUM_TABLES 7
+#define NUM_TABLES 8
 #define gScale 1.0d0
 #define scale_all .false.
 #define scale_diamond .false.
@@ -18,7 +18,7 @@ module class_ratelibrary
   end interface new_RateLibrary
 
   interface return_weakrate
-     module procedure return_weakrate_dynamic_search, return_weakrate_from_table, return_weakrate_from_approx
+     module procedure return_weakrate_dynamic_search, return_weakrate_from_table, return_weakrate_from_approx, return_weakrate_from_approx2
   end interface return_weakrate
 
   type RateLibrary
@@ -171,6 +171,20 @@ contains
 
 !------------------------------------------------------------------------------------!
 
+  function return_weakrate_from_approx2(idxrate,xtemp,xq,xmue,xrho,A,Z) result(rate)
+
+    implicit none
+    type(RateLibrary) :: this
+    integer :: idxrate, A, Z
+    real*8 :: xtemp, xmue, xq, xrho
+    real*8 :: rate
+
+    rate = scaling_factor(A,Z) * weakrates_approx2(idxrate,xtemp,xq,xmue, xrho, A, Z)
+    return
+
+  end function return_weakrate_from_approx2
+!------------------------------------------------------------------------------------!
+
   function return_weakrate_from_approx(idxrate,xtemp,xq,xmue,A,Z) result(rate)
 
     implicit none
@@ -275,6 +289,7 @@ contains
     call get_string_parameter(fn,'pruet_rates1',library%files_to_load(5))
     call get_string_parameter(fn,'pruet_rates2',library%files_to_load(6))
     call get_string_parameter(fn,'pruet_rates3',library%files_to_load(7))
+    call get_string_parameter(fn,'rate_pf_obs',library%files_to_load(8))
 
     call get_integer_parameter(fn,'ilmp',library%priority(1))
     call get_integer_parameter(fn,'ilmsh',library%priority(2))
@@ -283,7 +298,8 @@ contains
     call get_integer_parameter(fn,'ipruet1',library%priority(5))
     call get_integer_parameter(fn,'ipruet2',library%priority(6))
     call get_integer_parameter(fn,'ipruet3',library%priority(7))
-    call get_integer_parameter(fn,'iapprox',library%priority(8))
+    call get_integer_parameter(fn,'irate_pf_obs',library%priority(8))
+    call get_integer_parameter(fn,'iapprox',library%priority(9))
     call get_string_parameter(fn,'eos_table_name',library%eos_path)
 
   end subroutine weakrate_inputparser

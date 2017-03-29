@@ -455,6 +455,14 @@ contains
        print *, "    |         |                                                                              |"
        print *, "    |         |                                                                              |"  
        print *, "    ------------------------------------------------------------------------------------------"       
+    case ("rate_pf_obs.dat")
+       print *, "    Loading pf rates calculated by Toshio Suzuki, Make reference to: "
+       print *, "    ------------------------------------------------------------------------------------------"
+       print *, "    |         |    To Be Implemented ...                                                     |"
+       print *, "    |         |                                                                              |"
+       print *, "    |         |                                                                              |"
+       print *, "    |         |                                                                              |"  
+       print *, "    ------------------------------------------------------------------------------------------"       
     case default
        stop "No default"
     end select
