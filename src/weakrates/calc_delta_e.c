@@ -192,8 +192,8 @@ int get_T_index(double T)
 }
 double get_delta_e_(double *temperature,
 		   double *rho,
-		   double *A,
-		   double *Z)
+		   int *A,
+		   int *Z)
 {
 #ifdef USE_MOD0
 	return 2.5;
