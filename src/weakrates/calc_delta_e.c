@@ -93,15 +93,15 @@ double get_inter_val(double rho, double T, int index_rho, int index_T, int A, in
 
 #ifdef USE_MOD1
 	temp_ij = a[index_T][index_rho];
-	temp_ij1 = a[index_T+1][index_rho];
-	temp_i1j = a[index_T][index_rho+1];
+	temp_i1j = a[index_T+1][index_rho];
+	temp_ij1 = a[index_T][index_rho+1];
 	temp_i1j1 = a[index_T+1][index_rho+1];
 #endif
 #ifdef USE_MOD2
 	ispin = (A-2.0*Z)/A;
 	temp_ij = b[index_T][index_rho] * ispin + c[index_T][index_rho];
-	temp_ij1 = b[index_T+1][index_rho] * ispin + c[index_T+1][index_rho];
-	temp_i1j = b[index_T][index_rho+1] * ispin + c[index_T][index_rho+1];
+	temp_i1j = b[index_T+1][index_rho] * ispin + c[index_T+1][index_rho];
+	temp_ij1 = b[index_T][index_rho+1] * ispin + c[index_T][index_rho+1];
 	temp_i1j1 = b[index_T+1][index_rho+1] * ispin + c[index_T+1][index_rho+1];
 #endif
 #ifdef USE_MOD3
@@ -109,20 +109,20 @@ double get_inter_val(double rho, double T, int index_rho, int index_T, int A, in
 	ispin = (A-2.0*Z)/A;
 	if (N%2 == 1 && Z%2 == 1) {
 		temp_ij = b_oo[index_T][index_rho] * ispin + c_oo[index_T][index_rho];
-		temp_ij1 = b_oo[index_T+1][index_rho] * ispin + c_oo[index_T+1][index_rho];
-		temp_i1j = b_oo[index_T][index_rho+1] * ispin + c_oo[index_T][index_rho+1];
+		temp_i1j = b_oo[index_T+1][index_rho] * ispin + c_oo[index_T+1][index_rho];
+		temp_ij1 = b_oo[index_T][index_rho+1] * ispin + c_oo[index_T][index_rho+1];
 		temp_i1j1 = b_oo[index_T+1][index_rho+1] * ispin + c_oo[index_T+1][index_rho+1];
 	}
 	else if (N%2 == 0 && Z%2 == 0) {
 		temp_ij = b_ee[index_T][index_rho] * ispin + c_ee[index_T][index_rho];
-		temp_ij1 = b_ee[index_T+1][index_rho] * ispin + c_ee[index_T+1][index_rho];
-		temp_i1j = b_ee[index_T][index_rho+1] * ispin + c_ee[index_T][index_rho+1];
+		temp_i1j = b_ee[index_T+1][index_rho] * ispin + c_ee[index_T+1][index_rho];
+		temp_ij1 = b_ee[index_T][index_rho+1] * ispin + c_ee[index_T][index_rho+1];
 		temp_i1j1 = b_ee[index_T+1][index_rho+1] * ispin + c_ee[index_T+1][index_rho+1];
 	}
 	else {
 		temp_ij = b_oe[index_T][index_rho] * ispin + c_oe[index_T][index_rho];
-		temp_ij1 = b_oe[index_T+1][index_rho] * ispin + c_oe[index_T+1][index_rho];
-		temp_i1j = b_oe[index_T][index_rho+1] * ispin + c_oe[index_T][index_rho+1];
+		temp_i1j = b_oe[index_T+1][index_rho] * ispin + c_oe[index_T+1][index_rho];
+		temp_ij1 = b_oe[index_T][index_rho+1] * ispin + c_oe[index_T][index_rho+1];
 		temp_i1j1 = b_oe[index_T+1][index_rho+1] * ispin + c_oe[index_T+1][index_rho+1];
 
 	}
@@ -132,20 +132,20 @@ double get_inter_val(double rho, double T, int index_rho, int index_T, int A, in
 	ispin = (A-2.0*Z)/A;
 	if (N%2 == 1 && Z%2 == 1) {
 		temp_ij = b2_oo[index_T][index_rho] * ispin * ispin + c2_oo[index_T][index_rho];
-		temp_ij1 = b2_oo[index_T+1][index_rho] * ispin * ispin + c2_oo[index_T+1][index_rho];
-		temp_i1j = b2_oo[index_T][index_rho+1] * ispin * ispin + c2_oo[index_T][index_rho+1];
+		temp_i1j = b2_oo[index_T+1][index_rho] * ispin * ispin + c2_oo[index_T+1][index_rho];
+		temp_ij1 = b2_oo[index_T][index_rho+1] * ispin * ispin + c2_oo[index_T][index_rho+1];
 		temp_i1j1 = b2_oo[index_T+1][index_rho+1] * ispin * ispin + c2_oo[index_T+1][index_rho+1];
 	}
 	else if (N%2 == 0 && Z%2 == 0) {
 		temp_ij = b2_ee[index_T][index_rho] * ispin * ispin + c2_ee[index_T][index_rho];
-		temp_ij1 = b2_ee[index_T+1][index_rho] * ispin * ispin + c2_ee[index_T+1][index_rho];
-		temp_i1j = b2_ee[index_T][index_rho+1] * ispin * ispin + c2_ee[index_T][index_rho+1];
+		temp_i1j = b2_ee[index_T+1][index_rho] * ispin * ispin + c2_ee[index_T+1][index_rho];
+		temp_ij1 = b2_ee[index_T][index_rho+1] * ispin * ispin + c2_ee[index_T][index_rho+1];
 		temp_i1j1 = b2_ee[index_T+1][index_rho+1] * ispin * ispin + c2_ee[index_T+1][index_rho+1];
 	}
 	else {
 		temp_ij = b2_oe[index_T][index_rho] * ispin * ispin + c2_oe[index_T][index_rho];
-		temp_ij1 = b2_oe[index_T+1][index_rho] * ispin * ispin + c2_oe[index_T+1][index_rho];
-		temp_i1j = b2_oe[index_T][index_rho+1] * ispin * ispin + c2_oe[index_T][index_rho+1];
+		temp_i1j = b2_oe[index_T+1][index_rho] * ispin * ispin + c2_oe[index_T+1][index_rho];
+		temp_ij1 = b2_oe[index_T][index_rho+1] * ispin * ispin + c2_oe[index_T][index_rho+1];
 		temp_i1j1 = b2_oe[index_T+1][index_rho+1] * ispin * ispin + c2_oe[index_T+1][index_rho+1];
 	}
 #endif
