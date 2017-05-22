@@ -252,22 +252,16 @@ contains
        endif
        if (idxtable.ne.0)then
           idxtable = i
-          exit
+          ! check if the requested point is in the grid
+          if (t9.ge.ratetables(idxtable)%range_t9(1).and.t9.le.ratetables(idxtable)%range_t9(2)&
+               .and.&
+               lrhoye.ge.ratetables(idxtable)%range_lrhoye(1).and.lrhoye.le.ratetables(idxtable)%range_lrhoye(2)) then
+             exit
+          else
+             idxtable = 0
+          endif
        endif
     end do
-
-    ! return if the requested nucleus i not found in a table
-    if (idxtable.eq.0)then
-       return
-    endif
-
-    ! check if the requested point is in the grid
-    if (t9.ge.ratetables(idxtable)%range_t9(1).and.t9.le.ratetables(idxtable)%range_t9(2)&
-         .and.&
-         lrhoye.ge.ratetables(idxtable)%range_lrhoye(1).and.lrhoye.le.ratetables(idxtable)%range_lrhoye(2)) then
-    else
-       idxtable = 0
-    endif
 
     return
 
