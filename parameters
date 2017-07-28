@@ -10,16 +10,18 @@ ffn_rates		=	"ffnrates.dat"
 pruet_rates1		=	"pruet_66_80.dat"
 pruet_rates2		=	"pruet_66_80_leftover.dat"
 pruet_rates3		=	"pruet_81_110.dat"
+suzuki_honma_gxpf1j	=	"suzuki_honma_gxpf1j.dat"
 
 ## Rate table priority hierarchy ##
-ilmp			=	1
-ilmsh			=	2
-ioda			=	3
-iffn			=	4
-ipruet1			=	5
-ipruet2			=	6
-ipruet3			=	7
-iapprox			=	8
+isuzuki_honma_gxpf1j	=	1
+ilmp			=	2
+ilmsh			=	3
+ioda			=	4
+iffn			=	5
+ipruet1			=	6
+ipruet2			=	7
+ipruet3			=	8
+iapprox			=	9
 
 # 0 indicates the table will not be used
 # 1 indicates highest priority, if other tables have rates for a nuclei contained in this table, they will be ignored.
