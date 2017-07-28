@@ -38,6 +38,8 @@ module class_ratelibrary
      integer, dimension(NUM_TABLES) :: ifiles
      ! path to eos file
      character*200 :: eos_path
+     ! raduta approximation model to used
+     integer :: approximation_model
   end type RateLibrary
 
   ! class instance (singleton)
@@ -218,7 +220,7 @@ contains
        ! use approx if no table contains a rate for (A,Z) at the req. point
        if (idxrate.eq.2.or.idxrate.eq.3)then
           q = return_hempel_qec(A,Z,Z-1)
-          rate = scaling_factor(A,Z) * weakrates_approx_raduta(idxrate, xtemp, q, xmue, lrhoye, A, Z, 3) ! xmue should be mu_e-m_e, and model is hard coded at the moment, Chris will fix this
+          rate = scaling_factor(A,Z) * weakrates_approx_raduta(idxrate, xtemp, q, xmue, lrhoye, A, Z, this%approximation_model) ! xmue should be mu_e-m_e
           return
        else
           stop "RateLibrary Error: approximate rates only exist for electron capture and neutrino e-loss"
@@ -294,6 +296,7 @@ contains
     call get_integer_parameter(fn,'ipruet3',library%priority(7))
     call get_integer_parameter(fn,'isuzuki_honma_gxpf1j',library%priority(8))
     call get_integer_parameter(fn,'iapprox',library%priority(9))
+    call get_integer_parameter(fn,'raduta_model',library%approximation_model)
     call get_string_parameter(fn,'eos_table_name',library%eos_path)
 
   end subroutine weakrate_inputparser
