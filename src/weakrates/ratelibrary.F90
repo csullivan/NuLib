@@ -283,7 +283,7 @@ contains
     call get_string_parameter(fn,'pruet_rates1',library%files_to_load(5))
     call get_string_parameter(fn,'pruet_rates2',library%files_to_load(6))
     call get_string_parameter(fn,'pruet_rates3',library%files_to_load(7))
-    call get_string_parameter(fn,'rate_pf_obs',library%files_to_load(8))
+    call get_string_parameter(fn,'suzuki_honma_gxpf1j',library%files_to_load(8))
 
     call get_integer_parameter(fn,'ilmp',library%priority(1))
     call get_integer_parameter(fn,'ilmsh',library%priority(2))
@@ -292,7 +292,7 @@ contains
     call get_integer_parameter(fn,'ipruet1',library%priority(5))
     call get_integer_parameter(fn,'ipruet2',library%priority(6))
     call get_integer_parameter(fn,'ipruet3',library%priority(7))
-    call get_integer_parameter(fn,'irate_pf_obs',library%priority(8))
+    call get_integer_parameter(fn,'isuzuki_honma_gxpf1j',library%priority(8))
     call get_integer_parameter(fn,'iapprox',library%priority(9))
     call get_string_parameter(fn,'eos_table_name',library%eos_path)
 

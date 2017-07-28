@@ -455,7 +455,7 @@ contains
        print *, "    |         |                                                                              |"
        print *, "    |         |                                                                              |"  
        print *, "    ------------------------------------------------------------------------------------------"       
-    case ("rate_pf_obs.dat")
+    case ("suzuki_honma_gxpf1j.dat")
        print *, "    Loading pf rates calculated by Toshio Suzuki, Make reference to: "
        print *, "    ------------------------------------------------------------------------------------------"
        print *, "    |         |    To Be Implemented ...                                                     |"
