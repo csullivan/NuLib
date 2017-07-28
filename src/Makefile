@@ -31,11 +31,11 @@ endif
 F2PY := $(shell which f2py)
 F90WRAP := $(shell which f90wrap)
 ifeq ($(PYTHON_BINDINGS),1)
-ifndef F2PY
-	$(error "Build python bindings flag is set, but f2py is not available on this system.")
+ifeq ($(F2PY),)
+$(error "Build python bindings flag is set, but f2py is not available on this system.")
 endif
-ifndef F90WRAP
-	$(error "Build python bindings flag is set, but f90wrap is not available on this system.")
+ifeq ($(F90WRAP),)
+$(error "Build python bindings flag is set, but f90wrap is not available on this system.")
 endif
 endif
 
