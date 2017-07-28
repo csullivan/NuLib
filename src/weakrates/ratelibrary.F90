@@ -1,5 +1,5 @@
 !-*-f90-*-
-#define NUM_TABLES 7
+#define NUM_TABLES 8
 #define gScale 1.0d0
 #define scale_all .false.
 #define scale_diamond .false.
@@ -18,7 +18,7 @@ module class_ratelibrary
   end interface new_RateLibrary
 
   interface return_weakrate
-     module procedure return_weakrate_dynamic_search, return_weakrate_from_table, return_weakrate_from_approx
+     module procedure return_weakrate_dynamic_search, return_weakrate_from_table, return_weakrate_from_approx, return_weakrate_from_approx_raduta
   end interface return_weakrate
 
   type RateLibrary
@@ -38,6 +38,8 @@ module class_ratelibrary
      integer, dimension(NUM_TABLES) :: ifiles
      ! path to eos file
      character*200 :: eos_path
+     ! raduta approximation model to used
+     integer :: approximation_model
   end type RateLibrary
 
   ! class instance (singleton)
@@ -171,6 +173,20 @@ contains
 
 !------------------------------------------------------------------------------------!
 
+  function return_weakrate_from_approx_raduta(idxrate,xtemp,xq,xmue,xrho,A,Z,model) result(rate)
+
+    implicit none
+    type(RateLibrary) :: this
+    integer :: idxrate, A, Z, model
+    real*8 :: xtemp, xmue, xq, xrho
+    real*8 :: rate
+
+    rate = scaling_factor(A,Z) * weakrates_approx_raduta(idxrate,xtemp,xq,xmue, xrho, A, Z, model)
+    return
+
+  end function return_weakrate_from_approx_raduta
+!------------------------------------------------------------------------------------!
+
   function return_weakrate_from_approx(idxrate,xtemp,xq,xmue,A,Z) result(rate)
 
     implicit none
@@ -204,7 +220,7 @@ contains
        ! use approx if no table contains a rate for (A,Z) at the req. point
        if (idxrate.eq.2.or.idxrate.eq.3)then
           q = return_hempel_qec(A,Z,Z-1)
-          rate = scaling_factor(A,Z) * weakrates_approx(idxrate-2,xtemp,q,xmue) ! xmue should be mu_e-m_e
+          rate = scaling_factor(A,Z) * weakrates_approx_raduta(idxrate, xtemp, q, xmue, lrhoye, A, Z, this%approximation_model) ! xmue should be mu_e-m_e
           return
        else
           stop "RateLibrary Error: approximate rates only exist for electron capture and neutrino e-loss"
@@ -238,22 +254,16 @@ contains
        endif
        if (idxtable.ne.0)then
           idxtable = i
-          exit
+          ! check if the requested point is in the grid
+          if (t9.ge.ratetables(idxtable)%range_t9(1).and.t9.le.ratetables(idxtable)%range_t9(2)&
+               .and.&
+               lrhoye.ge.ratetables(idxtable)%range_lrhoye(1).and.lrhoye.le.ratetables(idxtable)%range_lrhoye(2)) then
+             exit
+          else
+             idxtable = 0
+          endif
        endif
     end do
-
-    ! return if the requested nucleus i not found in a table
-    if (idxtable.eq.0)then
-       return
-    endif
-
-    ! check if the requested point is in the grid
-    if (t9.ge.ratetables(idxtable)%range_t9(1).and.t9.le.ratetables(idxtable)%range_t9(2)&
-         .and.&
-         lrhoye.ge.ratetables(idxtable)%range_lrhoye(1).and.lrhoye.le.ratetables(idxtable)%range_lrhoye(2)) then
-    else
-       idxtable = 0
-    endif
 
     return
 
@@ -275,6 +285,7 @@ contains
     call get_string_parameter(fn,'pruet_rates1',library%files_to_load(5))
     call get_string_parameter(fn,'pruet_rates2',library%files_to_load(6))
     call get_string_parameter(fn,'pruet_rates3',library%files_to_load(7))
+    call get_string_parameter(fn,'suzuki_honma_gxpf1j',library%files_to_load(8))
 
     call get_integer_parameter(fn,'ilmp',library%priority(1))
     call get_integer_parameter(fn,'ilmsh',library%priority(2))
@@ -283,7 +294,9 @@ contains
     call get_integer_parameter(fn,'ipruet1',library%priority(5))
     call get_integer_parameter(fn,'ipruet2',library%priority(6))
     call get_integer_parameter(fn,'ipruet3',library%priority(7))
-    call get_integer_parameter(fn,'iapprox',library%priority(8))
+    call get_integer_parameter(fn,'isuzuki_honma_gxpf1j',library%priority(8))
+    call get_integer_parameter(fn,'iapprox',library%priority(9))
+    call get_integer_parameter(fn,'raduta_model',library%approximation_model)
     call get_string_parameter(fn,'eos_table_name',library%eos_path)
 
   end subroutine weakrate_inputparser
