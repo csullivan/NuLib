@@ -18,7 +18,7 @@ module class_ratelibrary
   end interface new_RateLibrary
 
   interface return_weakrate
-     module procedure return_weakrate_dynamic_search, return_weakrate_from_table, return_weakrate_from_approx, return_weakrate_from_approx2
+     module procedure return_weakrate_dynamic_search, return_weakrate_from_table, return_weakrate_from_approx, return_weakrate_from_approx_raduta
   end interface return_weakrate
 
   type RateLibrary
@@ -171,18 +171,18 @@ contains
 
 !------------------------------------------------------------------------------------!
 
-  function return_weakrate_from_approx2(idxrate,xtemp,xq,xmue,xrho,A,Z) result(rate)
+  function return_weakrate_from_approx_raduta(idxrate,xtemp,xq,xmue,xrho,A,Z,model) result(rate)
 
     implicit none
     type(RateLibrary) :: this
-    integer :: idxrate, A, Z
+    integer :: idxrate, A, Z, model
     real*8 :: xtemp, xmue, xq, xrho
     real*8 :: rate
 
-    rate = scaling_factor(A,Z) * weakrates_approx2(idxrate,xtemp,xq,xmue, xrho, A, Z)
+    rate = scaling_factor(A,Z) * weakrates_approx_raduta(idxrate,xtemp,xq,xmue, xrho, A, Z, model)
     return
 
-  end function return_weakrate_from_approx2
+  end function return_weakrate_from_approx_raduta
 !------------------------------------------------------------------------------------!
 
   function return_weakrate_from_approx(idxrate,xtemp,xq,xmue,A,Z) result(rate)
@@ -218,7 +218,7 @@ contains
        ! use approx if no table contains a rate for (A,Z) at the req. point
        if (idxrate.eq.2.or.idxrate.eq.3)then
           q = return_hempel_qec(A,Z,Z-1)
-          rate = scaling_factor(A,Z) * weakrates_approx(idxrate-2,xtemp,q,xmue) ! xmue should be mu_e-m_e
+          rate = scaling_factor(A,Z) * weakrates_approx_raduta(idxrate, xtemp, q, xmue, lrhoye, A, Z, 3) ! xmue should be mu_e-m_e, and model is hard coded at the moment, Chris will fix this
           return
        else
           stop "RateLibrary Error: approximate rates only exist for electron capture and neutrino e-loss"

@@ -3,7 +3,7 @@ module class_rateapproximation
 
   implicit none
   private
-  public :: RateApprox, new_RateApprox, return_hempel_qec, weakrates_approx, weakrates_approx2, print_approx_reference
+  public :: RateApprox, new_RateApprox, return_hempel_qec, weakrates_approx, weakrates_approx_raduta, print_approx_reference
 
   ! constructor declaration
   interface new_RateApprox
@@ -77,7 +77,7 @@ contains
   end function return_hempel_qec
 
 !------------------------------------------------------------------
-  function weakrates_approx2(n,temperature,q_gs,mue,rho,A,Z) result(rate)
+  function weakrates_approx_raduta(n,temperature,q_gs,mue,rho,A,Z,model) result(rate)
 
     integer, intent(in) :: n ! 0 for electron capture rate, 1 for nuetrino energy loss rate
     real*8 :: rate
@@ -90,11 +90,12 @@ contains
     real*8 :: delta_E
     integer, intent(in) :: A
     integer, intent(in) :: Z
+    integer, intent(in) :: model
     real*8 :: complete_fermi_integral
-    real*8 :: get_delta_E
+    real*8 :: get_delta_e_raduta
     include 'constants.inc'
 
-    delta_E = get_delta_e(temperature, rho, A, Z)
+    delta_E = get_delta_e_raduta(temperature, rho, A, Z, model)
     chi = (q_gs-delta_E)/temperature
     eta = mue/temperature + chi
 
@@ -105,7 +106,7 @@ contains
 
     return
 
-  end function weakrates_approx2
+  end function weakrates_approx_raduta
 !------------------------------------------------------------------------------------!
 
   function weakrates_approx(n,temperature,q_gs,mue) result(rate)
