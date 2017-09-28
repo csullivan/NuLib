@@ -142,6 +142,11 @@ contains
     print *, "    |         | Physical Review Letters 90, 241102.                                          |"
     print *, "    |         | http://prl.aps.org/abstract/PRL/v90/i24/e241102                              |"
     print *, "    ------------------------------------------------------------------------------------------"
+    print *, "    | Ad. R. Raduta (2017)                                                                   |"
+    print *, "    | Stellar electron capture rates on neutron-rich nuclei and their impact on              |"
+    print *, "    | stellar core collapse. Physical Review C, 95, 025805.                                  |"
+    print *, "    | https://journals.aps.org/prc/abstract/10.1103/PhysRevC.95.025805                       |"
+    print *, "    ------------------------------------------------------------------------------------------"
     !$OMP END SINGLE
   end subroutine print_approx_reference
 end module class_rateapproximation
