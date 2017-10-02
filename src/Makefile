@@ -89,10 +89,6 @@ EXTRAINCS = -I./nuc_eos
 EXTRADEPS = nuc_eos/nuc_eos.a
 EXTRAOBJECTS = nuc_eos/nuc_eos.a
 
-#extra C library dependence
-EXTRACDEPS = ./weakrates/src/Clibs.a
-CLIB_SRC = ./weakrates/src/calc_delta_e.c
-CLIB_OBJECTS = $(CLIB_SRC:.c=.o)
 
 ifeq ($(HELMHOLTZ_EOS),1)
 	DEFS += -DHELMHOLTZ_EOS
@@ -108,6 +104,12 @@ EXTRAINCS += $(HDF5INCS)
 EXTRAOBJECTS += $(HDF5LIBS) -Wl,-rpath,$(HDF5DIR)/lib
 
 ifeq ($(WEAK_RATES),1)
+
+#extra C library dependence
+EXTRACDEPS = ./weakrates/src/Clibs.a
+CLIB_SRC = ./weakrates/src/calc_delta_e.c
+CLIB_OBJECTS = $(CLIB_SRC:.c=.o)
+
 all: nulib.a ../nulibtable_driver ../point_example ../make_table_weakrates ../libNuLib.so PyNuLib
 else
 all: nulib.a ../nulibtable_driver ../point_example ../make_table_example ../libNuLib.so
