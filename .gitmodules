@@ -1,0 +1,3 @@
+[submodule "src/weakrates"]
+	path = src/weakrates
+	url = https://github.com/csullivan/weakrates

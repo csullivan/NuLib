@@ -46,10 +46,10 @@ ifeq ($(NUCLEI_HEMPEL),0)
 $(error NUCLEI_HEMPEL must be 1 for weakrates)
 endif
 
-	MODULES += weakrates/ratetable.F90 \
-		   weakrates/rateapprox.F90 \
-		   weakrates/ratelibrary.F90 \
-		   weakrates/interface.F90 \
+	MODULES += weakrates/src/ratetable.F90 \
+		   weakrates/src/rateapprox.F90 \
+		   weakrates/src/ratelibrary.F90 \
+		   weakrates/src/interface.F90 \
 
 	DEFS += -DWEAK_RATES
 	SOURCES += pyinterface.F90
@@ -90,8 +90,8 @@ EXTRADEPS = nuc_eos/nuc_eos.a
 EXTRAOBJECTS = nuc_eos/nuc_eos.a
 
 #extra C library dependence
-EXTRACDEPS = ./weakrates/Clibs.a
-CLIB_SRC = ./weakrates/calc_delta_e.c
+EXTRACDEPS = ./weakrates/src/Clibs.a
+CLIB_SRC = ./weakrates/src/calc_delta_e.c
 CLIB_OBJECTS = $(CLIB_SRC:.c=.o)
 
 ifeq ($(HELMHOLTZ_EOS),1)
@@ -131,8 +131,8 @@ nulib.a: $(EXTRADEPS) $(F_OBJECTS) $(MOD_OBJECTS) $(OBJECTS) $(NT_OBJECTS) $(CLI
 ../libNuLib.so: $(EXTRADEPS) $(F_OBJECTS) $(MOD_OBJECTS) $(EXTRACDEPS) $(OBJECTS) $(NT_OBJECTS)
 	$(F90) $(F90FLAGS) $(DEFS) $(MODINC) $(EXTRAINCS) $(LDFLAGS) -o $@ $(MOD_OBJECTS) $(EXTRACDEPS) $(OBJECTS) $(F_OBJECTS) $(EXTRAOBJECTS)
 
-./weakrates/Clibs.a: $(CLIB_OBJECTS)
-	ar -rvs ./weakrates/Clibs.a $(CLIB_OBJECTS)
+./weakrates/src/Clibs.a: $(CLIB_OBJECTS)
+	ar -rvs ./weakrates/src/Clibs.a $(CLIB_OBJECTS)
 $(CLIB_OBJECTS): %.o: %.c
 	gcc $(CFLAGS) -c $< -o $@
 
@@ -189,5 +189,5 @@ clean:
 	$(MAKE) -C nuc_eos clean
 	rm -rf ./extra_code_and_tables/sfho_frdm_comp/sfho_frdm_composition_module.o
 	rm -rf ./other_eos/helmholtz/*.o
-	rm -rf ./weakrates/*.o
-	rm -rf ./weakrates/*.a
+	rm -rf ./weakrates/src/*.o
+	rm -rf ./weakrates/src/*.a
